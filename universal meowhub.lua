@@ -51,7 +51,7 @@ local Colors = {
 }
 
 local ThemeRegistry = {}
-local selectCategory -- Forward declaration for real-time redrawing on theme updates
+local selectCategory, Categories -- Forward declarations
 local activeCategoryIdx = 1
 
 local function pruneRegistry()
@@ -223,7 +223,7 @@ local function getExecutorName()
     return "Unknown Executor"
 end
 
-local Categories = {
+Categories = {
     {
         Name = "Info",
         Icon = "ℹ️",
@@ -1083,8 +1083,12 @@ scriptsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 scriptsLayout.Padding = UDim.new(0, 1)
 scriptsLayout.Parent = ScriptContainer
 
+local queuedThisTeleport = false
 local function setupTeleportQueue()
-    local queue = queue_on_teleport or (syn and syn.queue_on_teleport)
+    if queuedThisTeleport then return end
+    queuedThisTeleport = true
+
+    local queue = queue_on_teleport or (syn and syn.queue_on_teleport) or run_on_teleport
     if queue then
         local success = pcall(function()
             if writefile then
@@ -1110,6 +1114,23 @@ local function setupTeleportQueue()
         end
     end
 end
+
+if getgenv().MeowHubTeleportConnection then
+    pcall(function()
+        getgenv().MeowHubTeleportConnection:Disconnect()
+    end)
+    getgenv().MeowHubTeleportConnection = nil
+end
+getgenv().MeowHubTeleportConnection = Player.OnTeleport:Connect(function(State)
+    if autoTeleport then
+        local stateStr = tostring(State)
+        if stateStr:find("Failed") or stateStr:find("Aborted") then
+            queuedThisTeleport = false
+        else
+            setupTeleportQueue()
+        end
+    end
+end)
 
 local antiAFKConnection = nil
 local function startAntiAFK()
@@ -2129,7 +2150,7 @@ local function createSettingsRow(scriptData)
     return row
 end
 
-local activeCategoryIdx = 1
+activeCategoryIdx = 1
 local tabButtons = {}
 local fileNodes = {}
 local activeTabs = {}
