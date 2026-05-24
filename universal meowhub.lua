@@ -1229,11 +1229,16 @@ local function updateSavedConfigsList()
     if listfiles then
         local success, files = pcall(listfiles, "")
         if success and type(files) == "table" then
-            local pattern = "meow_cfg_" .. tostring(game.PlaceId) .. "_(.+)%.json$"
+            local placePrefix = "meow_cfg_" .. tostring(game.PlaceId) .. "_"
             for _, file in ipairs(files) do
-                local name = file:match(pattern)
-                if name and name ~= "default" then
-                    table.insert(savedConfigsList, name)
+                -- Strip full path separators so we only check the bare filename
+                local basename = file:match("[/\\]?([^/\\]+)$") or file
+                -- Only match files that start with this game's PlaceId prefix
+                if basename:sub(1, #placePrefix) == placePrefix then
+                    local name = basename:match("^meow_cfg_%d+_(.+)%.json$")
+                    if name and name ~= "default" then
+                        table.insert(savedConfigsList, name)
+                    end
                 end
             end
         end
