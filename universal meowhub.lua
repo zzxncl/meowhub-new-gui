@@ -1229,8 +1229,9 @@ local function updateSavedConfigsList()
     if listfiles then
         local success, files = pcall(listfiles, "")
         if success and type(files) == "table" then
+            local pattern = "meow_cfg_" .. tostring(game.PlaceId) .. "_(.+)%.json$"
             for _, file in ipairs(files) do
-                local name = file:match("meow_cfg_(.+)%.json$")
+                local name = file:match(pattern)
                 if name and name ~= "default" then
                     table.insert(savedConfigsList, name)
                 end
@@ -1324,7 +1325,7 @@ local function saveConfig(name)
     end)
     
     if success and writefile then
-        local filename = "meow_cfg_" .. string.lower(name) .. ".json"
+        local filename = "meow_cfg_" .. tostring(game.PlaceId) .. "_" .. string.lower(name) .. ".json"
         local success2 = pcall(writefile, filename, str)
         if success2 then
             toast("Config Saved", "Successfully saved config: " .. name, 3, Colors.Success)
@@ -1343,7 +1344,7 @@ local function loadConfig(name)
         return
     end
     
-    local filename = "meow_cfg_" .. string.lower(name) .. ".json"
+    local filename = "meow_cfg_" .. tostring(game.PlaceId) .. "_" .. string.lower(name) .. ".json"
     if isfile and isfile(filename) and readfile then
         local success, content = pcall(readfile, filename)
         if success then
@@ -1373,7 +1374,7 @@ local function deleteConfig(name)
         return
     end
     
-    local filename = "meow_cfg_" .. string.lower(name) .. ".json"
+    local filename = "meow_cfg_" .. tostring(game.PlaceId) .. "_" .. string.lower(name) .. ".json"
     if isfile and isfile(filename) and delfile then
         local success = pcall(delfile, filename)
         if success then
@@ -1399,10 +1400,11 @@ local function setAutoload(name)
         return
     end
     
-    local filename = "meow_cfg_" .. string.lower(name) .. ".json"
+    local filename = "meow_cfg_" .. tostring(game.PlaceId) .. "_" .. string.lower(name) .. ".json"
     if isfile and isfile(filename) then
         if writefile then
-            local success = pcall(writefile, "meow_autoload.txt", string.lower(name))
+            local autoloadFile = "meow_autoload_" .. tostring(game.PlaceId) .. ".txt"
+            local success = pcall(writefile, autoloadFile, string.lower(name))
             if success then
                 toast("Autoload Set", "Config '" .. name .. "' will autoload on rejoin.", 3, Colors.Success)
             else
@@ -1415,8 +1417,9 @@ local function setAutoload(name)
 end
 
 local function resetAutoload()
-    if delfile and isfile and isfile("meow_autoload.txt") then
-        local success = pcall(delfile, "meow_autoload.txt")
+    local autoloadFile = "meow_autoload_" .. tostring(game.PlaceId) .. ".txt"
+    if delfile and isfile and isfile(autoloadFile) then
+        local success = pcall(delfile, autoloadFile)
         if success then
             toast("Autoload Reset", "Removed autoload configuration.", 3, Colors.Success)
         else
@@ -1428,10 +1431,11 @@ local function resetAutoload()
 end
 
 local function checkAutoload()
-    if isfile and isfile("meow_autoload.txt") and readfile then
-        local success, name = pcall(readfile, "meow_autoload.txt")
+    local autoloadFile = "meow_autoload_" .. tostring(game.PlaceId) .. ".txt"
+    if isfile and isfile(autoloadFile) and readfile then
+        local success, name = pcall(readfile, autoloadFile)
         if success and name and name ~= "" then
-            local filename = "meow_cfg_" .. string.lower(name) .. ".json"
+            local filename = "meow_cfg_" .. tostring(game.PlaceId) .. "_" .. string.lower(name) .. ".json"
             if isfile(filename) then
                 loadConfig(name)
             end
